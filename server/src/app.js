@@ -21,6 +21,7 @@ app.use("/v1", api);
 
 app.get("/*", (req, res) => {
   const filePath = path.join(__dirname, "..", "public", "index.html");
+  console.log("Serving file:", filePath); // This should log the file path
   res.sendFile(filePath);
 });
 

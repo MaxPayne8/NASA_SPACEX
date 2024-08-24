@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-
-import {
-  httpGetLaunches,
-  httpSubmitLaunch,
-  httpAbortLaunch,
-} from './requests';
+import { httpGetLaunches, httpSubmitLaunch, httpAbortLaunch } from "./requests";
 
 function useLaunches(onSuccessSound, onAbortSound, onFailureSound) {
   const [launches, saveLaunches] = useState([]);
   const [isPendingLaunch, setPendingLaunch] = useState(false);
 
-  const getLaunches = useCallback(async () => {
-    const fetchedLaunches = await httpGetLaunches();
+  const getLaunches = useCallback(async (page = 0) => {
+    const skip = page * 20; // Adjust based on the launches per page
+    const fetchedLaunches = await httpGetLaunches(skip, 20);
     saveLaunches(fetchedLaunches);
   }, []);
 
@@ -19,44 +15,50 @@ function useLaunches(onSuccessSound, onAbortSound, onFailureSound) {
     getLaunches();
   }, [getLaunches]);
 
-  const submitLaunch = useCallback(async (e) => {
-    e.preventDefault();
-    setPendingLaunch(true);
-    const data = new FormData(e.target);
-    const launchDate = new Date(data.get("launch-day"));
-    const mission = data.get("mission-name");
-    const rocket = data.get("rocket-name");
-    const target = data.get("planets-selector");
-    const response = await httpSubmitLaunch({
-      launchDate,
-      mission,
-      rocket,
-      target,
-    });
+  const submitLaunch = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setPendingLaunch(true);
+      const data = new FormData(e.target);
+      const launchDate = new Date(data.get("launch-day"));
+      const mission = data.get("mission-name");
+      const rocket = data.get("rocket-name");
+      const target = data.get("planets-selector");
+      const response = await httpSubmitLaunch({
+        launchDate,
+        mission,
+        rocket,
+        target,
+      });
 
-    const success = response.ok;
-    if (success) {
-      getLaunches();
-      setTimeout(() => {
-        setPendingLaunch(false);
-        onSuccessSound();
-      }, 800);
-    } else {
-      onFailureSound();
-    }
-  }, [getLaunches, onSuccessSound, onFailureSound]);
+      const success = response.ok;
+      if (success) {
+        getLaunches();
+        setTimeout(() => {
+          setPendingLaunch(false);
+          onSuccessSound();
+        }, 800);
+      } else {
+        onFailureSound();
+      }
+    },
+    [getLaunches, onSuccessSound, onFailureSound]
+  );
 
-  const abortLaunch = useCallback(async (id) => {
-    const response = await httpAbortLaunch(id);
+  const abortLaunch = useCallback(
+    async (id) => {
+      const response = await httpAbortLaunch(id);
 
-    const success = response.ok;
-    if (success) {
-      getLaunches();
-      onAbortSound();
-    } else {
-      onFailureSound();
-    }
-  }, [getLaunches, onAbortSound, onFailureSound]);
+      const success = response.ok;
+      if (success) {
+        getLaunches();
+        onAbortSound();
+      } else {
+        onFailureSound();
+      }
+    },
+    [getLaunches, onAbortSound, onFailureSound]
+  );
 
   return {
     launches,

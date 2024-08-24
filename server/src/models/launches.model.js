@@ -1,5 +1,4 @@
 const axios = require("axios");
-
 const launchesDatabase = require("./launches.mongo");
 const planets = require("./planets.mongo");
 
@@ -38,9 +37,7 @@ async function populateLaunches() {
   const launchDocs = response.data.docs;
   for (const launchDoc of launchDocs) {
     const payloads = launchDoc["payloads"];
-    const customers = payloads.flatMap((payload) => {
-      return payload["customers"];
-    });
+    const customers = payloads.flatMap((payload) => payload["customers"]);
 
     const launch = {
       flightNumber: launchDoc["flight_number"],
@@ -76,6 +73,7 @@ async function findLaunch(filter) {
 }
 
 async function existsLaunchWithId(launchId) {
+  // Define the function
   return await findLaunch({
     flightNumber: launchId,
   });
@@ -148,7 +146,7 @@ async function abortLaunchById(launchId) {
 
 module.exports = {
   loadLaunchData,
-  existsLaunchWithId,
+  existsLaunchWithId, // Now it will work because the function is defined
   getAllLaunches,
   scheduleNewLaunch,
   abortLaunchById,
